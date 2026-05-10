@@ -12,6 +12,22 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+const handleLogin = async () => {
+   setError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Por favor completá todos los campos.");
+      return;
+    }
+
+    if (role === "patient") {
+      router.replace("/home")
+    } else {
+      router.replace("/nurse-dashboard")
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -85,13 +101,23 @@ export default function LoginScreen() {
               <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
+            {/* Error Banner */}
+            {error && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
             {/* ✅ Botón login — navega a /home */}
             <TouchableOpacity
               style={styles.cta}
-              onPress={() => router.replace("/home")}
+              onPress={() => handleLogin()}
             >
               <Text style={styles.ctaText}>Iniciar sesión →</Text>
             </TouchableOpacity>
+
+            
+
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
@@ -130,6 +156,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
   },
+    errorBanner: {
+    backgroundColor: "#FEE2E2",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: "#EF4444",
+  },
+  errorText: { fontSize: 13, color: "#B91C1C" },
   logoBox: {
     width: 68, height: 68,
     backgroundColor: "rgba(255,255,255,0.15)",
