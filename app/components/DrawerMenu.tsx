@@ -25,7 +25,9 @@ export type RouteKey =
   | "settings"
   | "nurse-dashboard"
   | "patient-list"
-  | "education";
+  | "education"
+  | "nurse-profile"
+  | "nurse-settings";
 
 interface NavItem {
   key: RouteKey;
@@ -61,8 +63,11 @@ const NAV_ITEMS: NavItem[] = [
   { key: "patient-list",   label: "Mis pacientes",    icon: "👥", roles: ["nurse"],            section: "main" },
   { key: "education",      label: "Educación",        icon: "📚", roles: ["nurse"],            section: "main" },
   // Shared
-  { key: "profile",        label: "Mi perfil",        icon: "👤", roles: ["patient", "nurse"], section: "account" },
-  { key: "settings",       label: "Ajustes",          icon: "⚙️", roles: ["patient", "nurse"], section: "account" },
+  { key: "profile",        label: "Mi perfil",        icon: "👤", roles: ["patient"], section: "account" },
+  { key: "settings",       label: "Ajustes",          icon: "⚙️", roles: ["patient"], section: "account" },
+
+  { key: "nurse-profile",  label: "Mi perfil",        icon: "👤", roles: ["nurse"], section: "account" },
+  { key: "nurse-settings",       label: "Ajustes",    icon: "⚙️", roles: ["nurse"], section: "account" },
 ];
 
 const DRAWER_WIDTH = Dimensions.get("window").width * 0.72;

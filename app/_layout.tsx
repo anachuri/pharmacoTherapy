@@ -25,6 +25,8 @@ export default function RootLayout() {
       <Stack.Screen name="nurse-dashboard" />
       <Stack.Screen name="patient-list" />
       <Stack.Screen name="education" />
+      <Stack.Screen name="nurse-profile" />
+      <Stack.Screen name="nurse-settings" />
     </Stack>
   );
 }
