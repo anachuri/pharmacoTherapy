@@ -77,10 +77,7 @@ export default function HomeScreen() {
                   {m.route} · {m.time} hs
                 </Text>
               </View>
-              <View style={styles.tagOk}>
-                  <Text style={styles.tagOkText}>Tomado</Text>
-                </View>
-              {/* {m.taken ? (
+              {m.taken ? (
                 <View style={styles.tagOk}>
                   <Text style={styles.tagOkText}>Tomado</Text>
                 </View>
@@ -91,7 +88,7 @@ export default function HomeScreen() {
                   onPress={() => markTaken(m.id)}>
                   <Text style={styles.markBtnText}>Marcar tomado</Text>
                 </TouchableOpacity>
-              )} */}
+              )}
             </View>
           ))}
         </View>
