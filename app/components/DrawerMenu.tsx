@@ -10,22 +10,22 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
+import { router } from "expo-router";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Role = "patient" | "nurse";
 
+/** Cada RouteKey mapea a un path de Expo Router */
 export type RouteKey =
-  // Patient routes
-  | "Home"
-  | "MedicationList"
-  | "AdherenceHistory"
-  | "AdverseEffects"
-  | "Profile"
-  | "Settings"
-  // Nurse routes
-  | "NurseDashboard"
-  | "PatientList"
-  | "EducationContent";
+  | "home"
+  | "medications"
+  | "adherence"
+  | "adverse-effects"
+  | "profile"
+  | "settings"
+  | "nurse-dashboard"
+  | "patient-list"
+  | "education";
 
 interface NavItem {
   key: RouteKey;
@@ -35,7 +35,7 @@ interface NavItem {
   section: "main" | "account";
 }
 
-interface UserInfo {
+export interface DrawerUser {
   fullName: string;
   role: Role;
   initials: string;
@@ -45,25 +45,24 @@ interface DrawerMenuProps {
   isOpen: boolean;
   onClose: () => void;
   currentRoute: RouteKey;
-  onNavigate: (route: RouteKey) => void;
   onLogout: () => void;
-  user: UserInfo;
+  user: DrawerUser;
 }
 
 // ─── Navigation Items ─────────────────────────────────────────────────────────
 const NAV_ITEMS: NavItem[] = [
   // Patient
-  { key: "Home",            label: "Inicio",           icon: "🏠", roles: ["patient"], section: "main" },
-  { key: "MedicationList",  label: "Mis medicamentos", icon: "💊", roles: ["patient"], section: "main" },
-  { key: "AdherenceHistory",label: "Historial",        icon: "📊", roles: ["patient"], section: "main" },
-  { key: "AdverseEffects",  label: "Efectos adversos", icon: "⚠️", roles: ["patient"], section: "main" },
+  { key: "home",           label: "Inicio",           icon: "🏠", roles: ["patient"],          section: "main" },
+  { key: "medications",    label: "Mis medicamentos", icon: "💊", roles: ["patient"],          section: "main" },
+  { key: "adherence",      label: "Historial",        icon: "📊", roles: ["patient"],          section: "main" },
+  { key: "adverse-effects",label: "Efectos adversos", icon: "⚠️", roles: ["patient"],          section: "main" },
   // Nurse
-  { key: "NurseDashboard",  label: "Dashboard",        icon: "📋", roles: ["nurse"],   section: "main" },
-  { key: "PatientList",     label: "Mis pacientes",    icon: "👥", roles: ["nurse"],   section: "main" },
-  { key: "EducationContent",label: "Educación",        icon: "📚", roles: ["nurse"],   section: "main" },
-  // Shared — account section
-  { key: "Profile",         label: "Mi perfil",        icon: "👤", roles: ["patient", "nurse"], section: "account" },
-  { key: "Settings",        label: "Ajustes",          icon: "⚙️", roles: ["patient", "nurse"], section: "account" },
+  { key: "nurse-dashboard",label: "Dashboard",        icon: "📋", roles: ["nurse"],            section: "main" },
+  { key: "patient-list",   label: "Mis pacientes",    icon: "👥", roles: ["nurse"],            section: "main" },
+  { key: "education",      label: "Educación",        icon: "📚", roles: ["nurse"],            section: "main" },
+  // Shared
+  { key: "profile",        label: "Mi perfil",        icon: "👤", roles: ["patient", "nurse"], section: "account" },
+  { key: "settings",       label: "Ajustes",          icon: "⚙️", roles: ["patient", "nurse"], section: "account" },
 ];
 
 const DRAWER_WIDTH = Dimensions.get("window").width * 0.72;
@@ -73,14 +72,12 @@ export default function DrawerMenu({
   isOpen,
   onClose,
   currentRoute,
-  onNavigate,
   onLogout,
   user,
 }: DrawerMenuProps) {
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
-  // ── Animate open / close ───────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       Animated.parallel([
@@ -112,23 +109,22 @@ export default function DrawerMenu({
     }
   }, [isOpen]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const visibleItems = (section: "main" | "account") =>
     NAV_ITEMS.filter(
       (item) => item.section === section && item.roles.includes(user.role)
     );
 
+  /** Navega usando Expo Router y cierra el drawer */
   const handleNavigate = (route: RouteKey) => {
-    onNavigate(route);
     onClose();
+    // Pequeño delay para que la animación de cierre se vea
+    setTimeout(() => router.push(`/${route}` as any), 150);
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  if (!isOpen && translateX._value === -DRAWER_WIDTH) return null;
+  if (!isOpen) return null;
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents={isOpen ? "auto" : "none"}>
-
+    <View style={StyleSheet.absoluteFillObject} pointerEvents="auto">
       {/* Overlay tap-to-close */}
       <TouchableWithoutFeedback onPress={onClose} accessibilityLabel="Cerrar menú">
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
@@ -144,9 +140,7 @@ export default function DrawerMenu({
               <Text style={styles.avatarText}>{user.initials}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                {user.fullName}
-              </Text>
+              <Text style={styles.userName} numberOfLines={1}>{user.fullName}</Text>
               <Text style={styles.userRole}>
                 {user.role === "patient" ? "Paciente" : "Enfermero/a"}
               </Text>
@@ -155,26 +149,20 @@ export default function DrawerMenu({
               onPress={onClose}
               style={styles.closeBtn}
               accessibilityLabel="Cerrar menú"
-              accessibilityRole="button"
             >
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
 
           {/* Nav items */}
-          <ScrollView
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
             <NavSection
               label="PRINCIPAL"
               items={visibleItems("main")}
               currentRoute={currentRoute}
               onPress={handleNavigate}
             />
-
             <View style={styles.sectionDivider} />
-
             <NavSection
               label="CUENTA"
               items={visibleItems("account")}
@@ -190,7 +178,6 @@ export default function DrawerMenu({
               style={styles.logoutBtn}
               onPress={onLogout}
               accessibilityRole="button"
-              accessibilityLabel="Cerrar sesión"
             >
               <Text style={styles.logoutIcon}>🚪</Text>
               <Text style={styles.logoutText}>Cerrar sesión</Text>
@@ -245,7 +232,6 @@ function NavSection({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const PRIMARY = "#0F766E";
 const BG_LIGHT = "#E1F5F0";
-const TEXT_DARK = "#134E4A";
 const TEXT_MUTED = "#5F7E7E";
 
 const styles = StyleSheet.create({
@@ -253,7 +239,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
-
   drawer: {
     position: "absolute",
     top: 0,
@@ -267,8 +252,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 16,
   },
-
-  // Header
   drawerHeader: {
     backgroundColor: PRIMARY,
     paddingHorizontal: 16,
@@ -286,22 +269,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  avatarText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   userInfo: { flex: 1 },
-  userName: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  userRole: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 11,
-    marginTop: 2,
-  },
+  userName: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  userRole: { color: "rgba(255,255,255,0.65)", fontSize: 11, marginTop: 2 },
   closeBtn: {
     width: 28,
     height: 28,
@@ -310,13 +281,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeBtnText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  // Nav
+  closeBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   navSection: { paddingTop: 8, paddingBottom: 4 },
   sectionLabel: {
     fontSize: 10,
@@ -347,36 +312,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  navIconActive: {
-    backgroundColor: "rgba(15,118,110,0.12)",
-  },
+  navIconActive: { backgroundColor: "rgba(15,118,110,0.12)" },
   navIconText: { fontSize: 15 },
-  navLabel: {
-    fontSize: 14,
-    color: TEXT_MUTED,
-    fontWeight: "500",
-    flex: 1,
-  },
-  navLabelActive: {
-    color: PRIMARY,
-    fontWeight: "700",
-  },
+  navLabel: { fontSize: 14, color: TEXT_MUTED, fontWeight: "500", flex: 1 },
+  navLabelActive: { color: PRIMARY, fontWeight: "700" },
   activeIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: PRIMARY,
   },
-
-  // Divider
   sectionDivider: {
     height: 1,
     backgroundColor: "#C4DEDE",
     marginHorizontal: 18,
     marginVertical: 4,
   },
-
-  // Logout
   logoutContainer: { paddingBottom: 8 },
   logoutBtn: {
     flexDirection: "row",
@@ -386,9 +337,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   logoutIcon: { fontSize: 18 },
-  logoutText: {
-    fontSize: 14,
-    color: "#EF4444",
-    fontWeight: "700",
-  },
+  logoutText: { fontSize: 14, color: "#EF4444", fontWeight: "700" },
 });

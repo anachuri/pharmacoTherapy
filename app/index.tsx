@@ -1,15 +1,11 @@
-import { Text, View } from "react-native";
+import { Redirect } from "expo-router";
 
+/**
+ * index.tsx — Punto de entrada.
+ * Redirige automáticamente a /login.
+ * Cuando tengas auth implementado, cambiá esto por:
+ *   isLoggedIn ? <Redirect href="/home" /> : <Redirect href="/login" />
+ */
 export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  return <Redirect href="/login" />;
 }
